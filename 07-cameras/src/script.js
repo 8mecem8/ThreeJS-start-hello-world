@@ -1,5 +1,28 @@
 import './style.css'
 import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+
+let cursor = 
+{
+    x: 0 ,
+    y: 0
+
+}
+
+/* const setCursor = () => 
+{
+ document.addEventListener('mousemove', (event) => { cursor.x = event.clientX / sizes.width - 0.5, cursor.y = event.clientY / sizes.height - 0.5, console.log(cursor.x)})
+
+ 
+} */
+//setCursor()
+
+
+
+
+
+
+
 
 /**
  * Base
@@ -25,10 +48,8 @@ scene.add(mesh)
 
 // Camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height)
-camera.position.x = 2
-camera.position.y = 2
-camera.position.z = 2
-camera.lookAt(mesh.position)
+camera.position.z = 3
+
 scene.add(camera)
 
 // Renderer
@@ -40,14 +61,46 @@ renderer.setSize(sizes.width, sizes.height)
 // Animate
 const clock = new THREE.Clock()
 
+
+
+//Controls
+const controls = new OrbitControls(camera, canvas)
+controls.enableDamping = true
+
+
+
+
+
+
+
+
+
+
+
+
+
 let tick
 
 (tick = () =>
 {
+    //console.log(camera.rotation.x)
     const elapsedTime = clock.getElapsedTime()
 
+    //Update Camera
+    /* camera.position.x = -(cursor.x) * 10
+    camera.position.y = cursor.y * 10
+     */
+
+    /* camera.position.x = Math.sin(cursor.x * Math.PI * 2) * 4
+    camera.position.z = Math.cos(cursor.x * Math.PI * 2) * 4
+    camera.position.y = cursor.y * 7
+    camera.lookAt(mesh.position) */
+
+    //Update controls
+    controls.update()
+
     // Update objects
-    mesh.rotation.y = elapsedTime;
+    //mesh.rotation.y = elapsedTime;
 
     // Render
     renderer.render(scene, camera)
