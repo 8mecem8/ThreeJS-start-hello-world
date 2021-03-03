@@ -40,7 +40,9 @@ renderer.setSize(sizes.width, sizes.height)
 // Animate
 const clock = new THREE.Clock()
 
-const tick = () =>
+let tick
+
+(tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
 
@@ -52,6 +54,4 @@ const tick = () =>
 
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
-}
-
-tick()
+})()
