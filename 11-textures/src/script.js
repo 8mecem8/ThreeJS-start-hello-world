@@ -2,6 +2,38 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
+
+
+//Textures
+const textureLoader = new THREE.TextureLoader()
+const texture = textureLoader.load('./textures/door/color.jpg')
+const ctexture = textureLoader.load('./textures/checkerboard-1024x1024.png')
+const actexture = textureLoader.load('./textures/checkerboard-8x8.png')
+
+
+
+//texture.repeat.x = 1.25
+//texture.repeat.y = 0.85
+
+//texture.wrapS = THREE.RepeatWrapping
+//texture.wrapT = THREE.RepeatWrapping
+
+//texture.wrapS = THREE.MirroredRepeatWrapping
+//texture.wrapT = THREE.MirroredRepeatWrapping
+
+//texture.offset.x = 0.23
+//texture.offset.y = 0.05
+
+//texture.rotation = Math.PI * 0.14 //2 //1.83
+//texture.center.x = 0.1
+//texture.center.x = 0.5
+
+actexture.generateMipmaps = false // for performanse update
+//actexture.minFilter = THREE.NearestFilter
+actexture.magFilter = THREE.NearestFilter //better quality filter even for small strected textures
+
+
+
 /**
  * Base
  */
@@ -15,7 +47,9 @@ const scene = new THREE.Scene()
  * Object
  */
 const geometry = new THREE.BoxGeometry(1, 1, 1)
-const material = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+//const geometry = new THREE.SphereGeometry(1,32,32)
+//const geometry = new THREE.TorusGeometry(1,0.35,32,100)
+const material = new THREE.MeshBasicMaterial({ map: actexture })
 const mesh = new THREE.Mesh(geometry, material)
 scene.add(mesh)
 
