@@ -3,6 +3,21 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
 
+
+
+
+
+
+
+//Textures
+
+const textureLoader = new THREE.TextureLoader()
+const simpleShadow = textureLoader.load('/textures/simpleShadow.jpg')
+
+
+
+
+
 /**
  * Base
  */
@@ -18,13 +33,13 @@ const scene = new THREE.Scene()
 /**
  * Lights
  */
-// Ambient light
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+//Ambient light
+const ambientLight = new THREE.AmbientLight(0x5ffffff, 0.5)
 gui.add(ambientLight, 'intensity').min(0).max(1).step(0.001)
 scene.add(ambientLight)
 
 // Directional light
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5)
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.57)
 directionalLight.position.set(2, 2, - 1)
 gui.add(directionalLight, 'intensity').min(0).max(1).step(0.001)
 gui.add(directionalLight.position, 'x').min(- 5).max(5).step(0.001)
@@ -33,8 +48,28 @@ gui.add(directionalLight.position, 'z').min(- 5).max(5).step(0.001)
 scene.add(directionalLight)
 
 
-directionalLight.castShadow = true
+// directionalLight.castShadow = true // important step for shadows
 
+// directionalLight.shadow.mapSize.width=1024
+// directionalLight.shadow.mapSize.width=1024
+
+
+// directionalLight.shadow.camera.top = 2
+// directionalLight.shadow.camera.right = 2
+// directionalLight.shadow.camera.left = -2
+// directionalLight.shadow.camera.bottom = -1
+
+// directionalLight.shadow.radius = 10
+
+
+// directionalLight.shadow.camera.far = 5.5
+// directionalLight.shadow.camera.near = 1
+
+// const directionalLightCameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera)
+// directionalLightCameraHelper.visible = false
+// scene.add(directionalLightCameraHelper)
+
+// console.log('directionalLight is ======>',directionalLight)
 
 
 /**
@@ -53,7 +88,7 @@ const sphere = new THREE.Mesh(
     material
 )
 
-sphere.castShadow = true
+sphere.castShadow = true // important step for shadows
 
 const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(5, 5),
@@ -62,11 +97,26 @@ const plane = new THREE.Mesh(
 plane.rotation.x = - Math.PI * 0.5
 plane.position.y = - 0.5
 
-plane.receiveShadow = true
+plane.receiveShadow = true // important step for shadows
+
+// Plane for the fake shadow
+const shadowplane = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.5, 1.5),
+    new THREE.MeshBasicMaterial({
+        //map: simpleShadow,
+        color: 0x000000,
+        transparent: true,
+        alphaMap: simpleShadow
+        
+    })
+)
+
+shadowplane.rotation.x = -Math.PI * 0.5
+shadowplane.position.y = -0.499
 
 
 
-scene.add(sphere, plane)
+scene.add(sphere, plane, shadowplane)
 
 /**
  * Sizes
@@ -114,7 +164,8 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
-renderer.shadowMap.enabled= true
+renderer.shadowMap.enabled= true // important step for shadows
+renderer.shadowMap.type = THREE.PCFSoftShadowMap // important step for shadows
 
 /**
  * Animate
@@ -124,6 +175,16 @@ const clock = new THREE.Clock()
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
+
+    //Animation with shadow animation
+    sphere.position.x = Math.cos(elapsedTime)*2
+    sphere.position.z = Math.sin(elapsedTime)*2
+    sphere.position.y = Math.abs(Math.sin(elapsedTime*4))
+
+    shadowplane.position.x = Math.cos(elapsedTime)*2 //sphere.position.x
+    shadowplane.position.z = Math.sin(elapsedTime)*2 //sphere.position.z
+    shadowplane.material.opacity = (2- sphere.position.y) * 0.4
+    
 
     // Update controls
     controls.update()
