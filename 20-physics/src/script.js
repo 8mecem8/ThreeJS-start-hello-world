@@ -169,6 +169,49 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
+
+//Utils
+
+const createSphere = (radius, position) =>
+{
+
+
+// Three.js Mesh
+
+const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(radius,32,32),
+    new THREE.MeshBasicMaterial({
+        metalness:0.3,
+        roughness:0.4,
+        envMap: environmentMapTexture,
+    })
+)
+mesh.castShadow=true
+mesh.position.copy(position)
+scene.add(mesh)
+
+
+
+// Canon.js Body
+
+const shape = CANNON.Sphere(radius)
+const  body = CANNON.Body({
+    mass: 0.1,
+    position: new CANNON.Vec3(0,3,0),
+    shape,
+    material: defaultMAterial
+})
+body.position.copy(position)
+world.add(body)
+
+
+}
+
+
+
+
+createSphere (0.5,{x:0,y:3,z:0})
+
 /**
  * Animate
  */
