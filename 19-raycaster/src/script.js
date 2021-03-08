@@ -192,7 +192,7 @@ raycaster.setFromCamera(mouse, camera)
     {
         intersect.object.material.color.set('#0000ff')
     }
-    console.log(intersects)
+    //console.log(intersects)
 
     // Update controls
     controls.update()
