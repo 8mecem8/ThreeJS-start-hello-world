@@ -2,6 +2,16 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'dat.gui'
+import CANNON from 'cannon' 
+import Stats from 'three/examples/jsm/libs/stats.module.js'
+import { Camera } from 'three'
+
+
+
+//Stats
+let stats = new Stats()
+document.body.appendChild( stats.dom );
+
 
 /**
  * Debug
@@ -16,6 +26,7 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+scene.background = new THREE.Color('#6fa284');
 
 /**
  * Textures
@@ -32,20 +43,52 @@ const environmentMapTexture = cubeTextureLoader.load([
     '/textures/environmentMaps/0/nz.png'
 ])
 
-/**
- * Test sphere
- */
-const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.5, 32, 32),
-    new THREE.MeshStandardMaterial({
-        metalness: 0.3,
-        roughness: 0.4,
-        envMap: environmentMapTexture
-    })
+//Physics 
+
+const world = new CANNON.World()
+world.gravity.set(0,-9.82,0)
+
+
+//Materials
+
+//we can only use 1 material for everything 
+const concreteMaterial = new CANNON.Material('concrete')
+const plasticMaterial = new CANNON.Material('plastic')
+
+
+
+const concretePlasticContactMaterial = new CANNON.ContactMaterial(
+    concreteMaterial,
+    plasticMaterial,
+    {
+        friction: 0.1,
+        restitution: 0.7
+    }
 )
-sphere.castShadow = true
-sphere.position.y = 0.5
-scene.add(sphere)
+world.addContactMaterial(concretePlasticContactMaterial)
+
+
+
+
+
+
+
+
+
+//Floor
+
+const floorShape = new CANNON.Plane()
+const floorBody = new CANNON.Body()
+floorBody.mass = 0
+floorBody.material= concreteMaterial
+floorBody.addShape(floorShape)
+floorBody.quaternion.setFromAxisAngle(
+    new CANNON.Vec3(-1,0,0),
+    Math.PI * 0.5
+)
+world.add(floorBody)
+
+
 
 /**
  * Floor
@@ -131,16 +174,35 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 const clock = new THREE.Clock()
 
+
+
+let oldelapsedTime = 0
+
+
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
+    const diffTime = elapsedTime - oldelapsedTime
+        oldelapsedTime = elapsedTime
+
+
+    //Update Pysics
+
+
+    
+
+    world.step(1/60,diffTime ,3)
+
+
+
 
     // Update controls
     controls.update()
 
     // Render
     renderer.render(scene, camera)
-
+    //Stats Update
+    stats.update();
     // Call tick again on the next frame
     window.requestAnimationFrame(tick)
 }
