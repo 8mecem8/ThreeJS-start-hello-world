@@ -64,7 +64,7 @@ window.addEventListener('mousemove', (event) =>
     mouse.x = event.clientX / sizes.width * 2 - 1
     mouse.y = - (event.clientY / sizes.height) * 2 + 1
 
-    console.log(mouse)
+    //console.log(mouse)
 })
 
 
@@ -167,15 +167,10 @@ const tick = () =>
 
 
 
-
-
-
-
-
 raycaster.setFromCamera(mouse, camera)
 
     const objectsToTest = [object1, object2, object3]
-    const intersects = raycaster.intersectObjects(objectsToTest)
+    const intersects = raycaster.intersectObjects(objectsToTest)// selects the object or objects when vektor line touch
 
     
     // for(const object of objectsToTest)
@@ -197,7 +192,7 @@ raycaster.setFromCamera(mouse, camera)
     {
         intersect.object.material.color.set('#0000ff')
     }
-
+    console.log(intersects)
 
     // Update controls
     controls.update()
