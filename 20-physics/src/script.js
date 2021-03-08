@@ -28,6 +28,28 @@ const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene()
 scene.background = new THREE.Color('#6fa284');
 
+
+
+// Sounds
+const hitSound = new Audio('sounds/hit.mp3')
+
+
+
+const playSound = (collision) =>
+{
+
+    const impactStrength = collision.contact.getImpactVelocityAlongNormal()
+    console.log(collision.contact)
+    if(impactStrength > 2)
+    {
+     hitSound.volume = Math.random()
+     hitSound.currentTime = 0
+     hitSound.play()
+    }
+}
+
+
+
 /**
  * Textures
  */
@@ -46,6 +68,9 @@ const environmentMapTexture = cubeTextureLoader.load([
 //Physics 
 
 const world = new CANNON.World()
+world.broadphase = new CANNON.SAPBroadphase(world)
+world.allowSleep= true
+console.log(world)
 world.gravity.set(0,-9.82,0)
 
 
@@ -172,6 +197,21 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 //Utils
 
+const objectsToUpdate = []
+
+
+//Sphere
+const spGeo = new THREE.SphereGeometry(0.5,20,20)// For performance improve
+const spMat = new THREE.MeshStandardMaterial({// For performance improve
+        metalness:0.3,
+        roughness:0.4,
+        envMap: environmentMapTexture
+    }) 
+
+
+
+
+
 const createSphere = (radius, position) =>
 {
 
@@ -179,13 +219,10 @@ const createSphere = (radius, position) =>
 // Three.js Mesh
 
 const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(radius,32,32),
-    new THREE.MeshBasicMaterial({
-        metalness:0.3,
-        roughness:0.4,
-        envMap: environmentMapTexture,
-    })
+    spGeo,
+    spMat
 )
+mesh.scale.set(radius,radius,radius)
 mesh.castShadow=true
 mesh.position.copy(position)
 scene.add(mesh)
@@ -194,23 +231,150 @@ scene.add(mesh)
 
 // Canon.js Body
 
-const shape = CANNON.Sphere(radius)
-const  body = CANNON.Body({
-    mass: 0.1,
+const shape =new CANNON.Sphere(radius)
+const body =new CANNON.Body({
+    mass: 1,
     position: new CANNON.Vec3(0,3,0),
-    shape,
-    material: defaultMAterial
+    shape: shape,
+    material: plasticMaterial
 })
 body.position.copy(position)
+body.timeLastSleepy = 20 // For performance improve
+body.sleepSpeedLimit = 20// For performance improve
+body.sleepTimeLimit = 20// For performance improve
+body.addEventListener('collide', playSound)
 world.add(body)
+
+
+// save objects to update
+
+objectsToUpdate.push({
+    mesh: mesh,
+    body: body
+})
+
 
 
 }
 
 
+createSphere(0.5, { x: 0, y: 3, z: 0 })
+
+console.log(objectsToUpdate[0].body)
 
 
-createSphere (0.5,{x:0,y:3,z:0})
+
+
+//Box
+
+
+// Create box
+const boxGeometry = new THREE.BoxGeometry(1, 1, 1)    // For performance improve
+const boxMaterial = new THREE.MeshStandardMaterial({ // For performance improve
+    metalness: 0.3,
+    roughness: 0.4,
+    envMap: environmentMapTexture
+})
+const createBox = (width, height, depth, position) =>
+{
+    // Three.js mesh
+    const mesh = new THREE.Mesh(boxGeometry, boxMaterial)
+    mesh.scale.set(width, height, depth)
+    mesh.castShadow = true
+    mesh.position.copy(position)
+    scene.add(mesh)
+
+    // Cannon.js body
+    const shape = new CANNON.Box(new CANNON.Vec3(width * 0.5, height * 0.5, depth * 0.5))
+
+    const body = new CANNON.Body({
+        mass: 1,
+        position: new CANNON.Vec3(0, 3, 0),
+        shape: shape,
+        material: plasticMaterial
+    })
+    body.position.copy(position)
+    body.timeLastSleepy = 20 // For performance improve
+    body.sleepSpeedLimit = 20// For performance improve
+    body.sleepTimeLimit = 20// For performance improve
+    body.addEventListener('collide', playSound)
+    world.addBody(body)
+
+    // Save in objects
+    objectsToUpdate.push({ mesh, body })
+}
+
+createBox(1, 1.5, 2, { x: 0, y: 3, z: 0 })
+
+
+
+
+
+
+
+
+
+
+//Debug
+const debugObject = {}
+
+debugObject.createSphere=()=>
+{
+    createSphere(
+       Math.random() * 0.9 * 1.1,
+         {
+                x:(Math.random()-0.5)* 3,
+                y:2, 
+                z:(Math.random()-0.5)* 4
+            
+         })
+}
+
+
+
+
+
+
+debugObject.createBox = () =>
+{
+    createBox(
+        Math.random(),
+        Math.random(),
+        Math.random(),
+        {
+            x: (Math.random() - 0.5) * 3,
+            y: 3,
+            z: (Math.random() - 0.5) * 3
+        }
+    )
+}
+
+
+
+
+debugObject.reset = () =>
+{
+for(const object of objectsToUpdate)
+    {
+        // Remove body
+        object.body.removeEventListener('collide', playSound)
+        world.removeBody(object.body)
+
+        // Remove mesh
+        scene.remove(object.mesh)
+    }
+
+}
+
+
+gui.add(debugObject,'createSphere')
+gui.add(debugObject, 'createBox')
+gui.add(debugObject, 'reset')
+
+
+
+
+
 
 /**
  * Animate
@@ -231,8 +395,21 @@ const tick = () =>
 
     //Update Pysics
 
+ // for 1 object 
+ //objectsToUpdate[0].mesh.position.copy(objectsToUpdate[0].body.position)
+  
+ 
+ //For multiple Objets
 
-    
+ for(let x of objectsToUpdate)
+ {
+
+    x.mesh.position.copy(x.body.position)
+    x.mesh.quaternion.copy(x.body.quaternion)
+ }
+
+
+
 
     world.step(1/60,diffTime ,3)
 
